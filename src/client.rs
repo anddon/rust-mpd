@@ -8,6 +8,7 @@ use bufstream::BufStream;
 
 use crate::convert::*;
 use crate::error::{Error, ParseError, ProtoError, Result};
+use crate::lsinfo::LsInfoResponse;
 use crate::message::{Channel, Message};
 use crate::mount::{Mount, Neighbor};
 use crate::output::Output;
@@ -215,6 +216,11 @@ impl<S: Read + Write> Client<S> {
     /// List all changes in a queue since given version
     pub fn changes(&mut self, version: u32) -> Result<Vec<Song>> {
         self.run_command("plchanges", version).and_then(|_| self.read_structs("file"))
+    }
+
+    /// Append all songs in path (directories add recursively) to the playlist
+    pub fn add<P: ToSongPath>(&mut self, path: P) -> Result<()> {
+        self.run_command("add", path).and_then(|_| self.expect_ok())
     }
 
     /// Append a song into a queue
@@ -439,8 +445,9 @@ impl<S: Read + Write> Client<S> {
     }
 
     /// Lists the contents of a directory.
-    pub fn lsinfo<P: ToSongPath>(&mut self, path: P) -> Result<Song> {
-        self.run_command("lsinfo", path).and_then(|_| self.read_struct())
+    pub fn lsinfo<P: ToSongPath>(&mut self, path: P) -> Result<Vec<LsInfoResponse>> {
+        self.run_command("lsinfo", path)?;
+        Ok(self.read_structs(&["directory", "file", "playlist"][..])?)
     }
 
     /// Returns raw metadata for file

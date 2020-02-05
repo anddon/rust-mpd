@@ -34,15 +34,31 @@ where
     }
 }
 
-pub struct Maps<'a, I: 'a> {
+pub trait Separator {
+    fn matches(&self, other: &str) -> bool;
+}
+
+impl Separator for &str {
+    fn matches(&self, other: &str) -> bool {
+        *self == other
+    }
+}
+
+impl Separator for &[&str] {
+    fn matches(&self, other: &str) -> bool {
+        self.iter().any(|s| *s == other)
+    }
+}
+
+pub struct Maps<'a, I: 'a, S: Separator> {
     pairs: &'a mut Pairs<I>,
-    sep: &'a str,
-    value: Option<String>,
+    sep: S,
+    value: Option<(String, String)>,
     done: bool,
     first: bool,
 }
 
-impl<'a, I> Iterator for Maps<'a, I>
+impl<'a, I, S: Separator> Iterator for Maps<'a, I, S>
 where
     I: Iterator<Item = io::Result<String>>,
 {
@@ -54,15 +70,15 @@ where
 
         let mut map = BTreeMap::new();
 
-        if let Some(b) = self.value.take() {
-            map.insert(self.sep.to_owned(), b);
+        if let Some((a, b)) = self.value.take() {
+            map.insert(a, b);
         }
 
         loop {
             match self.pairs.next() {
                 Some(Ok((a, b))) => {
-                    if &*a == self.sep {
-                        self.value = Some(b);
+                    if self.sep.matches(&*a) {
+                        self.value = Some((a, b));
                         if self.first {
                             self.first = false;
                             return self.next();
@@ -92,7 +108,7 @@ impl<I> Pairs<I>
 where
     I: Iterator<Item = io::Result<String>>,
 {
-    pub fn split<'a, 'b: 'a>(&'a mut self, f: &'b str) -> Maps<'a, I> {
+    pub fn split<'a, 'b: 'a, S: Separator>(&'a mut self, f: S) -> Maps<'a, I, S> {
         Maps {
             pairs: self,
             sep: f,
@@ -116,7 +132,7 @@ pub trait Proto {
     where
         I: ToArguments;
 
-    fn read_structs<'a, T>(&'a mut self, key: &'static str) -> Result<Vec<T>>
+    fn read_structs<'a, T, S: Separator>(&'a mut self, key: S) -> Result<Vec<T>>
     where
         T: 'a + FromMap,
     {

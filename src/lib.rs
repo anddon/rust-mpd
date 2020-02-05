@@ -35,6 +35,7 @@
 mod convert;
 pub mod error;
 pub mod idle;
+pub mod lsinfo;
 mod macros;
 pub mod message;
 pub mod mount;
