@@ -384,9 +384,14 @@ impl<S: Read + Write> Client<S> {
     // Database search {{{
     // TODO: count tag needle [...] [group] [grouptag], find type what [...] [window start:end]
     // TODO: search type what [...] [window start:end], searchadd type what [...]
-    // TODO: listallinfo [uri], listfiles [uri]
+    // TODO: listallinfo [uri]
     // TODO: list type [filtertype] [filterwhat] [...] [group] [grouptype] [...]
     // TODO: searchaddpl name type what [...]
+
+    /// List all songs/directories in directory
+    pub fn listfiles(&mut self, song_path: &str) -> Result<Vec<(String, String)>> {
+        self.run_command("listfiles", song_path).and_then(|_| self.read_pairs().collect())
+    }
 
     /// Find songs matching Query conditions.
     pub fn find<W>(&mut self, query: &Query, window: W) -> Result<Vec<Song>>
