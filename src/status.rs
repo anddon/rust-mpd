@@ -4,7 +4,6 @@ use crate::convert::FromIter;
 use crate::error::{Error, ParseError};
 use crate::song::{Id, QueuePlace};
 
-use rustc_serialize::{Encodable, Encoder};
 use std::fmt;
 use std::str::FromStr;
 use std::time::Duration;
@@ -54,66 +53,6 @@ pub struct Status {
     pub error: Option<String>,
     /// replay gain mode
     pub replaygain: Option<ReplayGain>,
-}
-
-impl Encodable for Status {
-    fn encode<S: Encoder>(&self, e: &mut S) -> Result<(), S::Error> {
-        e.emit_struct("Status", 21, |e| {
-            e.emit_struct_field("volume", 0, |e| self.volume.encode(e))?;
-            e.emit_struct_field("repeat", 1, |e| self.repeat.encode(e))?;
-            e.emit_struct_field("random", 2, |e| self.random.encode(e))?;
-            e.emit_struct_field("single", 3, |e| self.single.encode(e))?;
-            e.emit_struct_field("consume", 4, |e| self.consume.encode(e))?;
-            e.emit_struct_field("queue_version", 5, |e| self.queue_version.encode(e))?;
-            e.emit_struct_field("queue_len", 6, |e| self.queue_len.encode(e))?;
-            e.emit_struct_field("state", 7, |e| self.state.encode(e))?;
-            e.emit_struct_field("song", 8, |e| self.song.encode(e))?;
-            e.emit_struct_field("nextsong", 9, |e| self.nextsong.encode(e))?;
-            e.emit_struct_field("time", 10, |e| {
-                e.emit_option(|e| match self.time {
-                    Some(p) => e.emit_option_some(|e| {
-                        e.emit_tuple(2, |e| {
-                            e.emit_tuple_arg(0, |e| p.0.as_secs().encode(e))?;
-                            e.emit_tuple_arg(1, |e| p.1.as_secs().encode(e))?;
-                            Ok(())
-                        })
-                    }),
-                    None => e.emit_option_none(),
-                })
-            })?;
-            e.emit_struct_field("elapsed", 11, |e| {
-                e.emit_option(|e| match self.elapsed {
-                    Some(d) => e.emit_option_some(|e| d.as_secs().encode(e)),
-                    None => e.emit_option_none(),
-                })
-            })?;
-            e.emit_struct_field("duration", 12, |e| {
-                e.emit_option(|e| match self.duration {
-                    Some(d) => e.emit_option_some(|e| d.as_secs().encode(e)),
-                    None => e.emit_option_none(),
-                })
-            })?;
-            e.emit_struct_field("bitrate", 13, |e| self.bitrate.encode(e))?;
-            e.emit_struct_field("crossfade", 14, |e| {
-                e.emit_option(|e| match self.crossfade {
-                    Some(d) => e.emit_option_some(|e| d.as_secs().encode(e)),
-                    None => e.emit_option_none(),
-                })
-            })?;
-            e.emit_struct_field("mixrampdb", 15, |e| self.mixrampdb.encode(e))?;
-            e.emit_struct_field("mixrampdelay", 16, |e| {
-                e.emit_option(|e| match self.mixrampdelay {
-                    Some(d) => e.emit_option_some(|e| d.as_secs().encode(e)),
-                    None => e.emit_option_none(),
-                })
-            })?;
-            e.emit_struct_field("audio", 17, |e| self.audio.encode(e))?;
-            e.emit_struct_field("updating_db", 18, |e| self.updating_db.encode(e))?;
-            e.emit_struct_field("error", 19, |e| self.error.encode(e))?;
-            e.emit_struct_field("replaygain", 20, |e| self.replaygain.encode(e))?;
-            Ok(())
-        })
-    }
 }
 
 impl FromIter for Status {
@@ -204,7 +143,7 @@ impl FromIter for Status {
 }
 
 /// Audio playback format
-#[derive(Debug, Copy, Clone, PartialEq, RustcEncodable)]
+#[derive(Debug, Copy, Clone, PartialEq)]
 pub struct AudioFormat {
     /// sample rate, kbps
     pub rate: u32,
@@ -239,7 +178,7 @@ impl FromStr for AudioFormat {
 }
 
 /// Playback state
-#[derive(Debug, Copy, Clone, PartialEq, RustcEncodable, RustcDecodable)]
+#[derive(Debug, Copy, Clone, PartialEq)]
 pub enum State {
     /// player stopped
     Stop,
@@ -268,7 +207,7 @@ impl FromStr for State {
 }
 
 /// Replay gain mode
-#[derive(Debug, Clone, Copy, PartialEq, RustcEncodable, RustcDecodable)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub enum ReplayGain {
     /// off
     Off,
