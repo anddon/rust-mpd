@@ -108,6 +108,7 @@ where
 pub trait Proto {
     type Stream: Read + Write;
 
+    fn read_bytes(&mut self, bytes: usize) -> Result<Vec<u8>>;
     fn read_line(&mut self) -> Result<String>;
     fn read_pairs(&mut self) -> Pairs<Lines<&mut BufStream<Self::Stream>>>;
 
