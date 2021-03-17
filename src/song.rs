@@ -3,7 +3,6 @@
 use crate::convert::FromIter;
 use crate::error::{Error, ParseError};
 
-use std::collections::BTreeMap;
 use std::fmt;
 use std::str::FromStr;
 use std::time::Duration;
@@ -83,7 +82,7 @@ pub struct Song {
     /// range to play (if queued for playback and range was set)
     pub range: Option<Range>,
     /// arbitrary tags, like album, artist etc
-    pub tags: BTreeMap<String, String>,
+    pub tags: Vec<(String, String)>,
 }
 
 impl FromIter for Song {
@@ -132,7 +131,7 @@ impl FromIter for Song {
                     Some(ref mut place) => place.prio = line.1.parse()?,
                 },
                 _ => {
-                    result.tags.insert(line.0, line.1);
+                    result.tags.push((line.0, line.1));
                 }
             }
         }
