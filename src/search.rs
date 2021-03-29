@@ -44,16 +44,21 @@ impl From<Option<(u32, u32)>> for Window {
 }
 
 #[derive(Default)]
-pub struct Query<'a> {
+pub struct FilterQuery<'a> {
     filters: Vec<Filter<'a>>,
 }
 
-impl<'a> Query<'a> {
-    pub fn new() -> Query<'a> {
-        Query { filters: Vec::new() }
+pub enum Query<'a> {
+    Filters(FilterQuery<'a>),
+    Expression(String),
+}
+
+impl<'a> FilterQuery<'a> {
+    pub fn new() -> FilterQuery<'a> {
+        FilterQuery { filters: Vec::new() }
     }
 
-    pub fn and<'b: 'a, V: 'b + Into<Cow<'b, str>>>(&mut self, term: Term<'b>, value: V) -> &mut Query<'a> {
+    pub fn and<'b: 'a, V: 'b + Into<Cow<'b, str>>>(&mut self, term: Term<'b>, value: V) -> &mut FilterQuery<'a> {
         self.filters.push(Filter::new(term, value));
         self
     }
@@ -90,7 +95,7 @@ impl<'a> ToArguments for &'a Filter<'a> {
     }
 }
 
-impl<'a> ToArguments for &'a Query<'a> {
+impl<'a> ToArguments for &'a FilterQuery<'a> {
     fn to_arguments<F, E>(&self, f: &mut F) -> StdResult<(), E>
     where
         F: FnMut(&str) -> StdResult<(), E>,
@@ -99,6 +104,18 @@ impl<'a> ToArguments for &'a Query<'a> {
             filter.to_arguments(f)?
         }
         Ok(())
+    }
+}
+
+impl<'a> ToArguments for &'a Query<'a> {
+    fn to_arguments<F, E>(&self, f: &mut F) -> StdResult<(), E>
+    where
+        F: FnMut(&str) -> StdResult<(), E>,
+    {
+        match self {
+            Query::Filters(filters) => (&filters).to_arguments(f),
+            Query::Expression(e) => e.to_arguments(f),
+        }
     }
 }
 
@@ -137,7 +154,7 @@ mod test {
 
     #[test]
     fn find_query_format() {
-        let mut query = Query::new();
+        let mut query = FilterQuery::new();
         let finished = query
             .and(Term::Tag("albumartist".into()), "Mac DeMarco")
             .and(Term::Tag("album".into()), "Salad Days");
@@ -147,8 +164,9 @@ mod test {
 
     #[test]
     fn multiple_and() {
-        let mut query = Query::new();
+        let mut query = FilterQuery::new();
         query.and(Term::Tag("albumartist".into()), "Mac DeMarco");
         query.and(Term::Tag("album".into()), "Salad Days");
+        assert_eq!(output, vec!["albumartist", "Mac DeMarco", "album", "Salad Days"]);
     }
 }

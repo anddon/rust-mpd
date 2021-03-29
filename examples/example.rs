@@ -16,5 +16,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     } else {
         println!("No song playing.");
     }
+
+    let query = Query::Expression(r#"(artist == "Miles Davis")"#.to_string());
+    for song in c.search(&query, None)? {
+        println!("{}", song.file);
+    }
+
     Ok(())
 }
