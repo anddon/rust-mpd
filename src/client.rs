@@ -218,14 +218,9 @@ impl<S: Read + Write> Client<S> {
         self.run_command("plchanges", version).and_then(|_| self.read_structs("file"))
     }
 
-    /// Append all songs in path (directories add recursively) to the playlist
-    pub fn add<P: ToSongPath>(&mut self, path: P) -> Result<()> {
+    /// Append one or more songs in path (directories add recursively) to the playlist
+    pub fn push<P: ToSongPath>(&mut self, path: P) -> Result<()> {
         self.run_command("add", path).and_then(|_| self.expect_ok())
-    }
-
-    /// Append a song into a queue
-    pub fn push<P: ToSongPath>(&mut self, path: P) -> Result<Id> {
-        self.run_command("addid", path).and_then(|_| self.read_field("Id")).map(Id)
     }
 
     /// Insert a song into a given position in a queue
