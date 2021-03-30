@@ -16,7 +16,7 @@ use crate::playlist::Playlist;
 use crate::plugin::Plugin;
 use crate::proto::*;
 use crate::search::{Query, Term, Window};
-use crate::song::{Id, Song};
+use crate::song::Song;
 use crate::stats::Stats;
 use crate::status::{ReplayGain, Status};
 use crate::sticker::Sticker;
