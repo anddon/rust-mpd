@@ -405,7 +405,7 @@ impl<S: Read + Write> Client<S> {
     pub fn albumart<P: ToSongPath>(&mut self, path: &P) -> Result<Vec<u8>> {
         let mut buf = vec![];
         loop {
-            self.run_command("albumart", (path, &*format!("{}", buf.len())))?;
+            self.run_command("albumart", (path.to_path(), format!("{}", buf.len())))?;
             let (_, size) = self.read_pair()?;
             let (_, bytes) = self.read_pair()?;
             let mut chunk = self.read_bytes(bytes.parse()?)?;
