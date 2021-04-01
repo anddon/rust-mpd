@@ -641,10 +641,15 @@ impl<S: Read + Write> Client<S> {
             self.read_pairs()
                 .split("file")
                 .map(|rmap| {
-                    rmap.map(|mut map| {
+                    rmap.map(|map| {
                         (
-                            map.remove("file").unwrap(),
-                            map.remove("sticker")
+                            map.iter()
+                                .filter_map(|(k, v)| if k == "file" { Some(v.to_owned()) } else { None })
+                                .next()
+                                .unwrap(),
+                            map.iter()
+                                .filter_map(|(k, v)| if k == "sticker" { Some(v.to_owned()) } else { None })
+                                .next()
                                 .and_then(|s| s.splitn(2, '=').nth(1).map(|s| s.to_owned()))
                                 .unwrap(),
                         )
